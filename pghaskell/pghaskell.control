@@ -1,0 +1,7 @@
+# pghaskell extension
+comment = 'Haskell procedural language'
+default_version = '0.1'
+module_pathname = '$libdir/pghaskell'
+relocatable = false
+schema = pg_catalog
+superuser = false
