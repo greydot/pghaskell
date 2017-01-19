@@ -20,7 +20,7 @@ compileFunction txt = runInterpreter $ do
 
 test :: IO ()
 test = do
-  r <- compileFunction "\\is -> let p = (pure :: a -> IO a) in p $ map (id) is"
+  r <- compileFunction "\\is -> let p = (pure :: [HsValue] -> IO [HsValue]) in p $ map (id) is"
   case r of
     Left e -> print e
     Right f -> pure (f []) >> putStrLn "OK"
