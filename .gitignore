@@ -1,0 +1,4 @@
+postgres/*
+.stack-work/*
+pghaskell/.stack-work/
+pghaskell-internal/.stack-work/
