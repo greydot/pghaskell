@@ -41,7 +41,7 @@ void _PG_init(void)
 static void initHsRTS(void)
 {
     static int argc = 1;
-    static char *args[] = { "libPgHaskell.so", NULL };
+    static char *args[] = { "libpghaskell.so", NULL };
     static char **argv = args;
 
     hs_init(&argc, &argv);

@@ -1,12 +1,17 @@
 {-# LANGUAGE GADTs        #-}
 {-# LANGUAGE RankNTypes   #-}
 {-# LANGUAGE TypeFamilies #-}
-module PgHaskell.Internal where
+module PgHaskell.Internal ( module Elog
+                          , HsValue(..)
+                          ) where
+
+import PgHaskell.Elog as Elog
 
 import Data.Map (Map)
 import Data.Proxy (Proxy)
 import Data.Text (Text)
 import Data.Typeable (Typeable)
+
 
 data PgContext = PgContext { pgFunctions :: Map Text PgFunction }
 
