@@ -1,6 +1,6 @@
 // This file is only required to make intero and other tools happy.
-// The variables declared in this file are normally provided within the
-// PostgreSQL context.
+// The variables and functions declared in this file are normally
+// provided within the PostgreSQL context.
 
 #define _POSIX_C_SOURCE 200809L
 #include <stdlib.h>
