@@ -12,3 +12,10 @@
 
 ErrorContextCallback *error_context_stack = NULL;
 sigjmp_buf *PG_exception_stack = NULL;
+
+int SPI_connect(void) { return -1; }
+int SPI_finish(void) { return -1; }
+
+void pg_re_throw(void) { puts("pg_re_throw"); for(;;); }
+void elog_start(const char *filename, int lineno, const char *funcname) { return; }
+void elog_finish(int elevel, const char *fmt, ...) { return; }
