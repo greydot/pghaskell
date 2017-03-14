@@ -29,20 +29,20 @@ C.include "<setjmp.h>"
 C.include "<server/postgres.h>"
 C.include "<server/utils/elog.h>"
 
-elogToCInt :: ElogPriority -> CInt
-elogToCInt ElogDebug5      = fromIntegral [C.pure| int{ DEBUG5 } |]
-elogToCInt ElogDebug4      = fromIntegral [C.pure| int{ DEBUG4 } |]
-elogToCInt ElogDebug3      = fromIntegral [C.pure| int{ DEBUG3 } |]
-elogToCInt ElogDebug2      = fromIntegral [C.pure| int{ DEBUG2 } |]
-elogToCInt ElogDebug1      = fromIntegral [C.pure| int{ DEBUG1 } |]
-elogToCInt ElogLog         = fromIntegral [C.pure| int{ LOG } |]
-elogToCInt ElogServerOnly  = fromIntegral [C.pure| int{ LOG_SERVER_ONLY } |]
-elogToCInt ElogInfo        = fromIntegral [C.pure| int{ INFO } |]
-elogToCInt ElogNotice      = fromIntegral [C.pure| int{ NOTICE } |]
-elogToCInt ElogWarning     = fromIntegral [C.pure| int{ WARNING } |]
-elogToCInt ElogError       = fromIntegral [C.pure| int{ ERROR } |]
-elogToCInt ElogFatal       = fromIntegral [C.pure| int{ FATAL } |]
-elogToCInt ElogPanic       = fromIntegral [C.pure| int{ PANIC } |]
+elogToInt :: Integral a => ElogPriority -> a
+elogToInt ElogDebug5      = fromIntegral [C.pure| int{ DEBUG5 } |]
+elogToInt ElogDebug4      = fromIntegral [C.pure| int{ DEBUG4 } |]
+elogToInt ElogDebug3      = fromIntegral [C.pure| int{ DEBUG3 } |]
+elogToInt ElogDebug2      = fromIntegral [C.pure| int{ DEBUG2 } |]
+elogToInt ElogDebug1      = fromIntegral [C.pure| int{ DEBUG1 } |]
+elogToInt ElogLog         = fromIntegral [C.pure| int{ LOG } |]
+elogToInt ElogServerOnly  = fromIntegral [C.pure| int{ LOG_SERVER_ONLY } |]
+elogToInt ElogInfo        = fromIntegral [C.pure| int{ INFO } |]
+elogToInt ElogNotice      = fromIntegral [C.pure| int{ NOTICE } |]
+elogToInt ElogWarning     = fromIntegral [C.pure| int{ WARNING } |]
+elogToInt ElogError       = fromIntegral [C.pure| int{ ERROR } |]
+elogToInt ElogFatal       = fromIntegral [C.pure| int{ FATAL } |]
+elogToInt ElogPanic       = fromIntegral [C.pure| int{ PANIC } |]
 
 -- ^ Wrapper around PostgreSQL's elog().
 -- Note that pgsqls elog is a macro, which is why we cannot wrap it into
@@ -57,4 +57,4 @@ elog p t = liftIO $ withCStringLen t $
                                         return;
                                        } |]
   where
-    cp = elogToCInt p
+    cp = elogToInt p
