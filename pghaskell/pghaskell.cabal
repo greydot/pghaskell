@@ -11,9 +11,10 @@ author:              Lana Black
 maintainer:          lanablack@amok.cc
 -- copyright:           
 category:            Database
-build-type:          Simple
--- extra-source-files:  
+build-type:          Configure
 cabal-version:       >=1.10
+extra-source-files:  configure
+extra-tmp-files:     eval.buildinfo
 
 flag dummy
   description:         Enable dummy C code
@@ -23,6 +24,7 @@ library
   -- other-modules:       
   -- other-extensions:    
   build-depends:       base >=4.8 && <4.10,
+                       array,
                        containers,
                        hint,
                        pghaskell-internal == 0.1,
@@ -36,6 +38,5 @@ library
   cc-options:          -Wall -Werror -fPIC -std=c11
   default-language:    Haskell2010
   include-dirs:        /usr/include/postgresql /usr/include/postgresql/server
-  extra-lib-dirs:      /usr/lib/postgresql
-  ghc-options:         -Wall -fPIC -dynamic -shared
-  ld-options:          -lHSrts-ghc8.0.2 -soname=libpghaskell.so
+  ghc-options:         -Wall -Werror
+  ld-options:          -Wl,-soname=libpghaskell.so
