@@ -30,6 +30,7 @@ static Datum pghsFuncHandler(PG_FUNCTION_ARGS);
 
 void _PG_init(void)
 {
+    // Initialize only once
     if(pgHaskellInitialized)
       return;
 
@@ -44,13 +45,15 @@ static void initHsRTS(void)
     static char *args[] = { "libpghaskell.so", NULL };
     static char **argv = args;
 
+    elog(DEBUG1, "Initializing Haskell runtime...");
     hs_init(&argc, &argv);
+    elog(DEBUG1, "Haskell runtime initialized.");
 }
 
 // Clean up on exit from library
 static void cleanupHsRTS(void)
 {
-    hs_exit();
+    // Note, we don't need to call hs_exit() here.
 }
 
 PG_FUNCTION_INFO_V1(pghsCallHandler);
@@ -58,6 +61,8 @@ PG_FUNCTION_INFO_V1(pghsCallHandler);
 Datum pghsCallHandler(PG_FUNCTION_ARGS)
 {
     Datum ret;
+
+    elog(DEBUG1, "Entering pghsCallHandler.");
     PG_TRY(); {
         ret = pghsFuncHandler(fcinfo);
     }
@@ -67,12 +72,13 @@ Datum pghsCallHandler(PG_FUNCTION_ARGS)
     }
     PG_END_TRY();
 
+    elog(DEBUG1, "Finishing pghsCallHandler.");
     return ret;
 }
 
 static Datum pghsFuncHandler(PG_FUNCTION_ARGS)
 {
-    Datum ret = 0;
+    Datum ret = 1;
 
     (void) fcinfo;
 
