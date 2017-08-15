@@ -5,16 +5,37 @@
 #include <setjmp.h>
 
 #include <server/postgres.h>
+#include <server/access/htup_details.h>
+#include <server/access/xact.h>
+#include <server/catalog/pg_proc.h>
+#include <server/catalog/pg_type.h>
+#include <server/commands/event_trigger.h>
+#include <server/commands/trigger.h>
 #include <server/executor/spi.h>
+#include <server/fmgr.h>
+#include <server/mb/pg_wchar.h>
+#include <server/miscadmin.h>
+#include <server/nodes/makefuncs.h>
+#include <server/parser/parse_type.h>
+#include <server/tcop/tcopprot.h>
+#include <server/utils/builtins.h>
 #include <server/utils/elog.h>
+#include <server/utils/lsyscache.h>
+#include <server/utils/memutils.h>
+#include <server/utils/rel.h>
+#include <server/utils/syscache.h>
+#include <server/utils/typcache.h>
 
 #include <HsFFI.h>
+
+#include "pghaskell.h"
 
 #ifdef PG_MODULE_MAGIC
 PG_MODULE_MAGIC;
 #endif
 
 static bool pgHaskellInitialized = false;
+static HTAB *pghsProcTab = NULL;
 
 // Prototypes
 void _PG_init(void);
@@ -22,7 +43,7 @@ static void initHsRTS(void);
 static void cleanupHsRTS(void) __attribute__((destructor));
 
 Datum pghsCallHandler(PG_FUNCTION_ARGS);
-static Datum pghsFuncHandler(PG_FUNCTION_ARGS);
+static Datum pghsFuncHandler(PG_FUNCTION_ARGS, bool);
 
 //                 C0D3
 
@@ -64,7 +85,7 @@ Datum pghsCallHandler(PG_FUNCTION_ARGS)
 
     elog(DEBUG1, "Entering pghsCallHandler.");
     PG_TRY(); {
-        ret = pghsFuncHandler(fcinfo);
+        ret = pghsFuncHandler(fcinfo, false);
     }
     PG_CATCH(); {
         // do some clean up
@@ -76,16 +97,46 @@ Datum pghsCallHandler(PG_FUNCTION_ARGS)
     return ret;
 }
 
-static Datum pghsFuncHandler(PG_FUNCTION_ARGS)
+static Datum pghsFuncHandler(PG_FUNCTION_ARGS, bool pltrusted)
 {
-    Datum ret = 1;
-
-    (void) fcinfo;
-
     if(SPI_connect() != SPI_OK_CONNECT)
         elog(ERROR, "SPI connection failure");
 
+
     SPI_finish();
 
+    Datum ret = 1;
     return ret;
+}
+
+
+static pghsProcDesc* compilePGHaskellFunction( Oid fnOid
+                                             , Oid tgrOid
+                                             , bool isEventTrigger
+                                             , bool trusted)
+{
+    HeapTuple procTup = SearchSysCache1(PROCOID, ObjectIdGetDatum(fnOid));
+
+    if(!HeapTupleIsValid(procTup))
+        elog(ERROR, "cache lookup failed for function oid %u", fnOid);
+
+    Form_pg_proc procStruct = (Form_pg_proc) GETSTRUCT(procTup);
+    pghsProcKey procKey = { .procOid = fnOid
+                          , .isTrigger = OidIsValid(tgrOid)
+                          , .userId = trusted ? GetUserId() : InvalidOid };
+
+    bool found = false;
+    pghsProcEntry* entry = hash_search(pghsProcTab, &procKey, HASH_ENTER, &found);
+    if(!found)
+        entry->desc = NULL;
+
+    bool isNull = false;
+    Datum srcDatum = SysCacheGetAttr(PROCOID, procTup, Anum_pg_proc_prosrc, &isNull);
+    if(isNull) {
+        elog(ERROR, "null proc src %u", fnOid);
+    }
+
+    //  char *procSource = TextDatumGetCString(srcDatum);
+
+    return NULL;
 }
