@@ -15,6 +15,9 @@ build-type:          Simple
 extra-source-files:  ChangeLog.md
 cabal-version:       >=1.10
 
+flag debug
+  description:         Build with debugging symbols
+
 library
   exposed-modules:     PgHaskell.Elog
                        PgHaskell.Internal
@@ -26,6 +29,11 @@ library
                        text >= 1.2
   hs-source-dirs:      src
   c-sources:           src/PgHaskell/Elog.c
-  cc-options:          -Wall -Werror -std=c11 -D_POSIX_C_SOURCE=1
+  if flag(debug)
+    cc-options:          -Wall -Werror -std=c11 -D_POSIX_C_SOURCE=1 -g -O0
+    ghc-options:         -Wall -Werror -g
+  else
+    cc-options:          -Wall -Werror -std=c11 -D_POSIX_C_SOURCE=1
+    ghc-options:         -Wall -Werror -g
   include-dirs:        /usr/include/postgresql /usr/include/postgresql/server
   default-language:    Haskell2010
