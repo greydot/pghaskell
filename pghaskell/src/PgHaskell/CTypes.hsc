@@ -2,20 +2,20 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 module PgHaskell.CTypes where
 
+import Data.Word
 import Foreign.C.Types
 import Foreign.Storable
 
+#include "pghaskell.h"
+
 -- Wrapper for PostgreSQL Oid type
--- See src/include/postgres_ext.h for definition
-newtype Oid = Oid CUInt
+newtype Oid = Oid #{type Oid}
   deriving (Show,Eq,Storable)
 
 data ProcKey = ProcKey { procOid :: {-# UNPACK #-} !Oid
                        , procIsTrigger :: {-# UNPACK #-} !Bool
                        , procUserId :: {-# UNPACK #-} !Oid
                        }
-
-#include "pghaskell.h"
 
 instance Storable ProcKey where
   sizeOf _ = #{size pghsProcKey}

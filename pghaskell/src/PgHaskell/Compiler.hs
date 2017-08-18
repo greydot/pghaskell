@@ -11,18 +11,14 @@ import Data.Typeable
 import Language.Haskell.Interpreter
 import Language.Haskell.Interpreter.Unsafe
 
-compileFunction :: Text -> IO (Either InterpreterError ([Int] -> IO [Int]))
+compileFunction :: Text -> IO (Either InterpreterError ([PgValue] -> IO [PgValue]))
 compileFunction txt = runInterpreter $ do
     unsafeSetGhcOption "-v"
-    sp <- get searchPath
-    liftIO (print sp)
     setImports ["Prelude"
                ,"Control.Monad.IO.Class"
                ,"Data.Monoid"
-            -- XXX: GHC linked to postgresql cannot find our internal libraries for some reason :(
-            --   ,"PgHaskell.Internal"
-            --   ,"PgHaskell.Elog"
-               ,"Language.Haskell.Interpreter"
+               ,"PgHaskell.Internal"
+               ,"PgHaskell.Elog"
                ]
     interpret body pure
   where
@@ -31,10 +27,10 @@ compileFunction txt = runInterpreter $ do
 
 test :: IO ()
 test = do
-    r <- compileFunction "\\is -> let p = (pure :: [PgValue] -> IO [PgValue]) in p $ map (id) is"
+    r <- compileFunction "putStrLn \"DERP\""
     case r of
       Left e -> print e
-      Right f -> pure (f []) >> print 0 -- (typeRep $ f [MkPgValue i])
+      Right f -> pure (f []) >> print (typeRep $ f [MkPgValue i])
   where
     i = 123 :: Int
 
