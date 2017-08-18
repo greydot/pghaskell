@@ -1,6 +1,6 @@
 module PgHaskell.Internal ( module Types
                           ) where
 
-import PgHaskell.Types as Types
+import PgHaskell.Internal.Types as Types
 
 data PgCompileError = PgCompileError
