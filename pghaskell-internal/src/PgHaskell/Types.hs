@@ -1,4 +1,5 @@
 {-# LANGUAGE GADTs #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TypeFamilies #-}
@@ -7,6 +8,7 @@ module PgHaskell.Types ( PG
                        , PgTypeName
                        ) where
 
+import Control.Monad.IO.Class
 import Data.ByteString (ByteString)
 import Data.Proxy (Proxy)
 import Data.Text (Text)
@@ -15,6 +17,7 @@ import Data.Typeable (Typeable)
 import Foreign.C.Types (CChar, CLong)
 
 newtype PG a = MkPG { runPG :: IO a }
+  deriving (Functor, Applicative, Monad, MonadIO)
 
 data PgValue where
   -- Note, `t' should be constrained

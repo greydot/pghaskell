@@ -28,6 +28,7 @@
 
 #include <HsFFI.h>
 
+#include "foreign.h"
 #include "pghaskell.h"
 
 #ifdef PG_MODULE_MAGIC
@@ -35,7 +36,6 @@ PG_MODULE_MAGIC;
 #endif
 
 static bool pgHaskellInitialized = false;
-static HTAB *pghsProcTab = NULL;
 
 // Prototypes
 void _PG_init(void);
@@ -44,6 +44,8 @@ static void cleanupHsRTS(void) __attribute__((destructor));
 
 Datum pghsCallHandler(PG_FUNCTION_ARGS);
 static Datum pghsFuncHandler(PG_FUNCTION_ARGS, bool);
+static HsIOPtr compilePGHaskellFunction(Oid, Oid, bool, bool);
+
 
 //                 C0D3
 
@@ -62,9 +64,11 @@ void _PG_init(void)
 
 static void initHsRTS(void)
 {
-    static int argc = 1;
+    static int argc = 0;
     static char *args[] = { "libpghaskell.so", NULL };
     static char **argv = args;
+
+    for(argc = 0; args[argc] != NULL; argc++);
 
     elog(DEBUG1, "Initializing Haskell runtime...");
     hs_init(&argc, &argv);
@@ -102,6 +106,12 @@ static Datum pghsFuncHandler(PG_FUNCTION_ARGS, bool pltrusted)
     if(SPI_connect() != SPI_OK_CONNECT)
         elog(ERROR, "SPI connection failure");
 
+    HsIOPtr fn = compilePGHaskellFunction(fcinfo->flinfo->fn_oid
+                                         ,InvalidOid
+                                         ,false
+                                         ,pltrusted);
+
+    if(fn) fn();
 
     SPI_finish();
 
@@ -110,10 +120,10 @@ static Datum pghsFuncHandler(PG_FUNCTION_ARGS, bool pltrusted)
 }
 
 
-static pghsProcDesc* compilePGHaskellFunction( Oid fnOid
-                                             , Oid tgrOid
-                                             , bool isEventTrigger
-                                             , bool trusted)
+static HsIOPtr compilePGHaskellFunction( Oid fnOid
+                                       , Oid tgrOid
+                                       , bool isEventTrigger
+                                       , bool trusted)
 {
     HeapTuple procTup = SearchSysCache1(PROCOID, ObjectIdGetDatum(fnOid));
 
@@ -121,22 +131,26 @@ static pghsProcDesc* compilePGHaskellFunction( Oid fnOid
         elog(ERROR, "cache lookup failed for function oid %u", fnOid);
 
     Form_pg_proc procStruct = (Form_pg_proc) GETSTRUCT(procTup);
+    (void) procStruct;
     pghsProcKey procKey = { .procOid = fnOid
                           , .isTrigger = OidIsValid(tgrOid)
                           , .userId = trusted ? GetUserId() : InvalidOid };
 
-    bool found = false;
-    pghsProcEntry* entry = hash_search(pghsProcTab, &procKey, HASH_ENTER, &found);
-    if(!found)
-        entry->desc = NULL;
-
     bool isNull = false;
     Datum srcDatum = SysCacheGetAttr(PROCOID, procTup, Anum_pg_proc_prosrc, &isNull);
+
     if(isNull) {
         elog(ERROR, "null proc src %u", fnOid);
+        // Unreachable
+        return NULL;
     }
 
-    //  char *procSource = TextDatumGetCString(srcDatum);
+    const char *procSource = TextDatumGetCString(srcDatum);
+    const size_t srcLen = strlen(procSource);
 
-    return NULL;
+    HsIOPtr fn = hsCompileFunction(procSource, srcLen);
+
+    ReleaseSysCache(procTup);
+
+    return fn;
 }
