@@ -3,10 +3,11 @@
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TypeFamilies #-}
-module PgHaskell.Types ( PG
-                       , PgValue(..)
-                       , PgTypeName
-                       ) where
+module PgHaskell.Internal.Types ( PG
+                                , PgValue(..)
+                                , PgTypeName
+                                , Callable
+                                ) where
 
 import Control.Monad.IO.Class
 import Data.ByteString (ByteString)
@@ -48,3 +49,5 @@ instance PgTypeable Int where
   pgTypeName _ = "bigint"
   toPgType = fromIntegral
   fromPgType = fromIntegral
+
+type Callable = [PgValue] -> PG PgValue

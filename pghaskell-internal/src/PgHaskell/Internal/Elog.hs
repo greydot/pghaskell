@@ -1,8 +1,8 @@
 {-# LANGUAGE QuasiQuotes     #-}
 {-# LANGUAGE TemplateHaskell #-}
-module PgHaskell.Elog ( ElogPriority(..)
-                      , elog
-                      ) where
+module PgHaskell.Internal.Elog ( ElogPriority(..)
+                               , elog
+                               ) where
 
 import Control.Monad.IO.Class
 import qualified Language.C.Inline as C
