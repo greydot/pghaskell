@@ -2,9 +2,10 @@
 {-# LANGUAGE OverloadedStrings #-}
 module PgHaskell.Foreign where
 
-import PgHaskell.Elog
-import PgHaskell.Compiler (compileFunction)
+import PgHaskell.Compiler (compileFunction, validateFunction)
 import PgHaskell.CTypes
+import PgHaskell.Internal
+import PgHaskell.Internal.Elog
 
 import Control.Monad (void)
 import Data.Monoid ((<>))
@@ -25,4 +26,17 @@ hsCompileFunction ptr sz = do
     res <- compileFunction txt
     case res of
       Left err -> nullFunPtr <$ elog ElogWarning ("Failed to compile function: " <> Text.pack (show err))
-      Right f -> wrap $ void (f [])
+      Right f -> wrap $ void (runPG $ f [])
+
+foreign export ccall hsValidateFunction :: Ptr CChar -> CSize -> IO CInt
+
+hsValidateFunction :: Ptr CChar -> CSize -> IO CInt
+hsValidateFunction ptr sz = do
+    txt <- Text.peekCStringLen (ptr, fromIntegral sz)
+    elog ElogDebug2 ("Checking code:\n" <> txt)
+    res <- validateFunction txt
+    case res of
+      Left err -> 0 <$ elog ElogWarning ("Failed to validate function: " <> Text.pack (show err))
+      Right b -> pure $ c b
+  where
+    c = fromIntegral . fromEnum
