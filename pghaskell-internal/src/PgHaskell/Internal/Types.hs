@@ -3,10 +3,11 @@
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TypeFamilies #-}
-module PgHaskell.Internal.Types ( PG
+module PgHaskell.Internal.Types ( PG(..)
                                 , PgValue(..)
+                                , returnValue
+                                , PgTypeable(..)
                                 , PgTypeName
-                                , Callable
                                 ) where
 
 import Control.Monad.IO.Class
@@ -20,9 +21,13 @@ import Foreign.C.Types (CChar, CLong)
 newtype PG a = MkPG { runPG :: IO a }
   deriving (Functor, Applicative, Monad, MonadIO)
 
-data PgValue where
+-- data PgValue where
   -- Note, `t' should be constrained
-  MkPgValue :: PgTypeable t => t -> PgValue
+--   MkPgValue :: PgTypeable t => t -> PgValue
+data PgValue = forall t. PgTypeable t => MkPgValue t
+
+returnValue :: PgTypeable t => t -> PG PgValue
+returnValue = pure . MkPgValue
 
 class Typeable t => PgTypeable t where
   type PgType t :: *
@@ -50,4 +55,3 @@ instance PgTypeable Int where
   toPgType = fromIntegral
   fromPgType = fromIntegral
 
-type Callable = [PgValue] -> PG PgValue
