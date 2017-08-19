@@ -131,7 +131,6 @@ static HsIOPtr compilePGHaskellFunction( Oid fnOid
         elog(ERROR, "cache lookup failed for function oid %u", fnOid);
 
     Form_pg_proc procStruct = (Form_pg_proc) GETSTRUCT(procTup);
-    (void) procStruct;
     pghsProcKey procKey = { .procOid = fnOid
                           , .isTrigger = OidIsValid(tgrOid)
                           , .userId = trusted ? GetUserId() : InvalidOid };
@@ -153,4 +152,42 @@ static HsIOPtr compilePGHaskellFunction( Oid fnOid
     ReleaseSysCache(procTup);
 
     return fn;
+}
+
+PG_FUNCTION_INFO_V1(pghsValidator);
+
+Datum pghsValidator(PG_FUNCTION_ARGS)
+{
+    Oid fnOid = PG_GETARG_OID(0);
+
+    if (!CheckFunctionValidatorAccess(fcinfo->flinfo->fn_oid, fnOid))
+        PG_RETURN_VOID();
+
+    HeapTuple procTup = SearchSysCache1(PROCOID, ObjectIdGetDatum(fnOid));
+    if(!HeapTupleIsValid(procTup))
+        elog(ERROR, "cache lookup failed for function oid %u", fnOid);
+
+    bool isNull = false;
+    Datum srcDatum = SysCacheGetAttr(PROCOID, procTup, Anum_pg_proc_prosrc, &isNull);
+
+    if(isNull) {
+        elog(ERROR, "null proc src %u", fnOid);
+        // Unreachable
+        PG_RETURN_VOID();
+    }
+
+    const char *procSource = TextDatumGetCString(srcDatum);
+    const size_t srcLen = strlen(procSource);
+
+    int valid = hsValidateFunction(procSource, srcLen);
+
+    ReleaseSysCache(procTup);
+
+    if(!valid) {
+        ereport(ERROR,
+                (errcode(ERRCODE_EXTERNAL_ROUTINE_EXCEPTION),
+                 errmsg("failed to validate haskell code")));
+    }
+
+    PG_RETURN_VOID();
 }
