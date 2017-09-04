@@ -21,16 +21,19 @@ flag debug
 library
   exposed-modules:     PgHaskell.Internal
                        PgHaskell.Internal.Elog
+                       PgHaskell.Internal.Postgre
                        PgHaskell.Internal.Types
-  -- other-modules:       
+  other-modules:       PgHaskell.Internal.InlineC
   -- other-extensions:    
   build-depends:       base >=4.9 && <4.10,
                        bytestring,
                        containers >= 0.5,
                        inline-c,
+                       template-haskell,
                        text >= 1.2
   hs-source-dirs:      src
   c-sources:           src/PgHaskell/Internal/Elog.c
+                       src/PgHaskell/Internal/Postgre.c
   if flag(debug)
     cc-options:          -Wall -std=c11 -D_POSIX_C_SOURCE=1 -g -O0
     ghc-options:         -Wall -g

@@ -13,4 +13,7 @@ typedef struct pghsProcKey {
     Oid userId;       // User ID in trusted environment
 } pghsProcKey;
 
-
+typedef struct pghsArg {
+    char argName[64];
+    char typeName[NAMEDATALEN];
+} pghsArg;

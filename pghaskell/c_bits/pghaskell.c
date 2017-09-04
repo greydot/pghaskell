@@ -13,6 +13,7 @@
 #include <server/commands/trigger.h>
 #include <server/executor/spi.h>
 #include <server/fmgr.h>
+#include <server/funcapi.h>
 #include <server/mb/pg_wchar.h>
 #include <server/miscadmin.h>
 #include <server/nodes/makefuncs.h>
@@ -45,6 +46,7 @@ static void cleanupHsRTS(void) __attribute__((destructor));
 Datum pghsCallHandler(PG_FUNCTION_ARGS);
 static Datum pghsFuncHandler(PG_FUNCTION_ARGS, bool);
 static HsIOPtr compilePGHaskellFunction(Oid, Oid, bool, bool);
+static int getFunctionArgs(HeapTuple, pghsArg**);
 
 
 //                 C0D3
@@ -147,7 +149,12 @@ static HsIOPtr compilePGHaskellFunction( Oid fnOid
     const char *procSource = TextDatumGetCString(srcDatum);
     const size_t srcLen = strlen(procSource);
 
+    pghsArg *args;
+    int nargs = getFunctionArgs(procTup, &args);
     HsIOPtr fn = hsCompileFunction(procSource, srcLen);
+
+    if(args)
+        pfree(args);
 
     ReleaseSysCache(procTup);
 
@@ -190,4 +197,48 @@ Datum pghsValidator(PG_FUNCTION_ARGS)
     }
 
     PG_RETURN_VOID();
+}
+
+static int getFunctionArgs(HeapTuple procTup, pghsArg **args)
+{
+    Oid *argTypes;
+    char **argNames;
+    char *argModes;
+
+    int n = get_func_arg_info(procTup, &argTypes, &argNames, &argModes);
+    elog(DEBUG2, "%d arguments found\n", n);
+    printf("%d arguments found\n", n);
+
+    pghsArg *r = NULL;
+    if(n > 0) {
+        r = palloc(sizeof(*r) * n);
+        for(int i = 0; i < n; i++) {
+            HeapTuple typeTup = SearchSysCache1(TYPEOID, ObjectIdGetDatum(argTypes[i]));
+            if(HeapTupleIsValid(typeTup)) {
+                elog(ERROR, "cache lookup failed to argument %d type %u", i, argTypes[i]);
+            }
+            Form_pg_type typeStruct = (Form_pg_type) GETSTRUCT(typeTup);
+
+            strncpy(r[i].typeName, NameStr(typeStruct->typname), sizeof(r[i].typeName));
+
+            if(argNames && argNames[i]) {
+                strncpy(r[i].argName, argNames[i], sizeof(r[i].argName));
+                printf("arg %d name %s type %u:%s\n", i, argNames[i], argTypes[i], r[i].typeName);
+            }
+
+
+            ReleaseSysCache(typeTup);
+        }
+    }
+
+    if(argTypes)
+        pfree(argTypes);
+    if(argNames)
+        pfree(argNames);
+    if(argModes)
+        pfree(argModes);
+
+    *args = r;
+
+    return n;
 }

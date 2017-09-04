@@ -3,7 +3,6 @@
 module PgHaskell.CTypes where
 
 import Data.Word
-import Foreign.C.Types
 import Foreign.Storable
 
 #include "pghaskell.h"

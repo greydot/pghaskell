@@ -17,11 +17,12 @@ data PgProc = PgProc { procCode :: String
                      , procImports :: [ModuleName]
                      } deriving (Show)
 
-type Callable = [PgValue] -> PG PgValue
+type Callable = [Int] -> PG Int
 
 compileFunction :: Text -> IO (Either InterpreterError Callable)
 compileFunction txt = runInterpreter $ do
     unsafeSetGhcOption "-v"
+    unsafeSetGhcOption "-fobject-code"
     setImports $ ["Prelude"
                  ,"PgHaskell.Internal"
                  ,"PgHaskell.Internal.Elog"
@@ -31,11 +32,12 @@ compileFunction txt = runInterpreter $ do
     pgproc = processSource txt
     fallBackCode _ = do
         elog ElogWarning "Fallback pghaskell procedure"
-        pure $ MkPgValue (0 :: Int)
+        pure (0 :: Int)
 
 validateFunction :: Text -> IO (Either InterpreterError Bool)
 validateFunction txt = runInterpreter $ do
     unsafeSetGhcOption "-v"
+    unsafeSetGhcOption "-fobject-code"
     setImports $ ["Prelude"
                  ,"PgHaskell.Internal"
                  ,"PgHaskell.Internal.Elog"
@@ -59,7 +61,7 @@ test = do
     r <- compileFunction "putStrLn \"DERP\""
     case r of
       Left e -> print e
-      Right f -> pure (f []) >> print (typeRep $ f [MkPgValue i])
+      Right f -> pure (f []) >> print (typeRep $ f [i])
   where
     i = 123 :: Int
 
