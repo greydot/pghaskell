@@ -1,9 +1,6 @@
 {-# LANGUAGE EmptyDataDecls #-}
-{-# LANGUAGE GADTs #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE TypeFamilies #-}
 module PgHaskell.Internal.Types ( Datum(..)
                                 , PG(..)
                                 , TypeName
