@@ -36,8 +36,3 @@ instance Postgre Int16 where
   postgreTypes _ = ["int2"]
   toDatum i = liftIO [C.exp| Datum { Int16GetDatum($(int16 i)) } |]
   fromDatum d = liftIO [C.exp| int16 { DatumGetInt16($(Datum d)) } |]
-
-instance Postgre Int8 where
-  postgreTypes _ = ["byte"]
-  toDatum i = liftIO [C.exp| Datum { Int8GetDatum($(int8 i)) } |]
-  fromDatum d = liftIO [C.exp| int8 { DatumGetInt8($(Datum d)) } |]

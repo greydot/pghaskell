@@ -23,5 +23,4 @@ postgreTypeTable = Map.fromList [ (C.TypeName "Datum", [t| Datum |])
                                 , (C.TypeName "int64", [t| Int64 |])
                                 , (C.TypeName "int32", [t| Int32 |])
                                 , (C.TypeName "int16", [t| Int16 |])
-                                , (C.TypeName "int8",  [t| Int8 |])
                                 ]
