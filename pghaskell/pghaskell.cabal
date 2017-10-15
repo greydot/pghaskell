@@ -28,10 +28,12 @@ library
                         PgHaskell.Foreign
   -- other-modules:       
   -- other-extensions:    
-  build-depends:       base >=4.8 && <4.10,
+  build-depends:       base >=4.8 && <5,
                        array,
+                       bytestring,
                        containers,
                        hint,
+                       inline-c,
                        pghaskell-internal == 0.1,
                        text
   hs-source-dirs:      src

@@ -2,6 +2,7 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE OverloadedStrings #-}
 module PgHaskell.Internal.Types ( Datum(..)
+                                , Oid(..)
                                 , PG(..)
                                 , TypeName
                                 , FCallInfoData
@@ -13,10 +14,15 @@ import Data.Text (Text)
 
 import Foreign.C.Types
 import Foreign.Ptr
+import Foreign.Storable
 
 -- |PostgreSQL datum type.
 -- See src/include/postgres.h for details.
 newtype Datum = Datum CUIntPtr
+
+-- Wrapper for PostgreSQL Oid type
+newtype Oid = Oid CUInt
+  deriving (Show,Eq,Storable)
 
 newtype PG a = MkPG { runPG :: IO a }
   deriving (Functor, Applicative, Monad, MonadIO)

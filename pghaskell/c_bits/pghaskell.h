@@ -14,6 +14,6 @@ typedef struct pghsProcKey {
 } pghsProcKey;
 
 typedef struct pghsArg {
-    char argName[64];
+    char argName[NAMEDATALEN];
     char typeName[NAMEDATALEN];
 } pghsArg;

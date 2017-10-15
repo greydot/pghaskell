@@ -20,6 +20,7 @@ postgreCtx = mempty { ctxTypesTable = postgreTypeTable }
 
 postgreTypeTable :: Map C.TypeSpecifier TH.TypeQ
 postgreTypeTable = Map.fromList [ (C.TypeName "Datum", [t| Datum |])
+                                , (C.TypeName "Oid",   [t| Oid   |])
                                 , (C.TypeName "int64", [t| Int64 |])
                                 , (C.TypeName "int32", [t| Int32 |])
                                 , (C.TypeName "int16", [t| Int16 |])
