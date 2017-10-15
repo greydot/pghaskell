@@ -9,7 +9,6 @@ import qualified Language.C.Inline as C
 import Data.Text (Text)
 import Data.Text.Foreign (withCStringLen)
 import Foreign.C.String (withCString)
-import Foreign.C.Types (CInt)
 
 data ElogPriority = ElogDebug5
                   | ElogDebug4
