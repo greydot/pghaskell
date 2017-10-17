@@ -23,9 +23,9 @@ flag debug
   description:         Build with debugging symbols
 
 library
-  exposed-modules:      PgHaskell.Compiler,
-                        PgHaskell.CTypes,
-                        PgHaskell.Foreign
+  exposed-modules:     PgHaskell.Compiler,
+                       PgHaskell.CTypes,
+                       PgHaskell.Foreign
   -- other-modules:       
   -- other-extensions:    
   build-depends:       base >=4.8 && <5,
