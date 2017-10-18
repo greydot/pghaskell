@@ -7,6 +7,7 @@ module PgHaskell.Internal.Types ( Datum(..)
                                 , TypeName
                                 , FCallInfoData
                                 , FCallInfo
+                                , ArgValue(..)
                                 ) where
 
 import Control.Monad.IO.Class
@@ -19,6 +20,7 @@ import Foreign.Storable
 -- |PostgreSQL datum type.
 -- See src/include/postgres.h for details.
 newtype Datum = Datum CUIntPtr
+  deriving (Show,Eq,Storable)
 
 -- Wrapper for PostgreSQL Oid type
 newtype Oid = Oid CUInt
@@ -37,3 +39,17 @@ data FCallInfoData
 -- |Haskell counterpart to PostgreSQL FunctionCallInfo.
 type FCallInfo = Ptr FCallInfoData
 
+data ArgValue = ArgValue { argIsNull :: Bool
+                         , argDatum :: Datum
+                         }
+
+#include "pghaskell/types.h"
+
+instance Storable ArgValue where
+  sizeOf _ = #{size pghsArgValue}
+  alignment _ = alignment (undefined :: Bool)
+
+  peek p = ArgValue <$> #{peek pghsArgValue, isNull} p
+                    <*> #{peek pghsArgValue, datum} p
+  poke p v = do #{poke pghsArgValue, isNull} p $ argIsNull v
+                #{poke pghsArgValue, datum} p $ argDatum v
