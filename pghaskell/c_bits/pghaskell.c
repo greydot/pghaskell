@@ -30,7 +30,7 @@
 #include <HsFFI.h>
 
 #include "foreign.h"
-#include "pghaskell.h"
+#include "pghaskell/types.h"
 
 #ifdef PG_MODULE_MAGIC
 PG_MODULE_MAGIC;

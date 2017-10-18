@@ -7,13 +7,18 @@
 #include <setjmp.h>
 #include <server/postgres.h>
 
-typedef struct pghsProcKey {
+typedef struct {
     Oid procOid;      // Function oid
     Oid isTrigger;    // Used instead of bool to avoid padding
     Oid userId;       // User ID in trusted environment
 } pghsProcKey;
 
-typedef struct pghsArg {
+typedef struct {
     char argName[NAMEDATALEN];
     char typeName[NAMEDATALEN];
 } pghsArg;
+
+typedef struct {
+    bool isNull;
+    Datum datum;
+} pghsArgValue;

@@ -14,7 +14,7 @@ import Foreign.Ptr
 import Foreign.Storable
 
 
-#include "pghaskell.h"
+#include "pghaskell/types.h"
 
 data ProcKey = ProcKey { procOid :: {-# UNPACK #-} !Oid
                        , procIsTrigger :: !Bool
