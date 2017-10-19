@@ -112,6 +112,7 @@ static Datum pghsFuncHandler(PG_FUNCTION_ARGS, bool pltrusted)
                                          ,InvalidOid
                                          ,false
                                          ,pltrusted);
+    Datum ret = 0;
 
     if(fn) {
         size_t nargs = PG_NARGS();
@@ -122,12 +123,11 @@ static Datum pghsFuncHandler(PG_FUNCTION_ARGS, bool pltrusted)
             args[i].datum = PG_GETARG_DATUM(i);
         }
 
-        fn(args, nargs);
+        ret = fn(args, nargs);
     }
 
     SPI_finish();
 
-    Datum ret = 1;
     return ret;
 }
 

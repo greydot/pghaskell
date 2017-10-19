@@ -7,7 +7,6 @@ import PgHaskell.CTypes
 import PgHaskell.Internal
 import PgHaskell.Internal.Elog
 
-import Control.Monad (void)
 import Data.Monoid ((<>))
 import Foreign.C.Types
 import Foreign.Marshal.Array (peekArray)
@@ -16,7 +15,7 @@ import Foreign.Storable
 import qualified Data.Text as Text
 import qualified Data.Text.Foreign as Text
 
-type Proc = Ptr ArgValue -> CSize -> IO ()
+type Proc = Ptr ArgValue -> CSize -> IO Datum
 
 foreign import ccall "wrapper"
   wrap :: (Proc) -> IO (FunPtr Proc)
@@ -31,7 +30,7 @@ hsCompileFunction pinfo = do
     res <- compileFunction info
     case res of
       Left err -> nullFunPtr <$ elog ElogWarning ("Failed to compile function: " <> Text.pack (show err))
-      Right f -> wrap $ \p s -> void (runPG . f =<< peekArray (fromIntegral s) p)
+      Right f -> wrap $ \p s -> runPG . f =<< peekArray (fromIntegral s) p
 
 foreign export ccall hsValidateFunction :: Ptr CChar -> CSize -> IO CInt
 
