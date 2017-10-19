@@ -6,9 +6,12 @@ echo "Building dev version with stack"
 echo
 stack build --flag pghaskell-internal:debug --flag pghaskell:debug || exit 1
 
+# exit 0
+
 echo
 echo "Buiding test version with cabal"
 echo
+rm -rf ~/.cabal/lib/x86_64-linux-ghc-8.0.2/*pghaskell*
 for d in pghaskell-internal pghaskell; do
     cd $d
     cabal install -fdebug --force-reinstalls

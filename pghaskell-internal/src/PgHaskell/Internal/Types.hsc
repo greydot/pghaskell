@@ -41,7 +41,7 @@ type FCallInfo = Ptr FCallInfoData
 
 data ArgValue = ArgValue { argIsNull :: Bool
                          , argDatum :: Datum
-                         }
+                         } deriving (Show)
 
 #include "pghaskell/types.h"
 

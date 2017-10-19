@@ -1,6 +1,8 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 module PgHaskell.CTypes ( ProcKey(..)
                         , ProcArg(..)
+                        , ProcInfo(..)
                         ) where
 
 import PgHaskell.Internal
@@ -9,6 +11,8 @@ import Data.Text (Text)
 import qualified Data.Text.Encoding as Text
 import qualified Data.Text.Foreign as Text
 import Foreign.C.String (CString)
+import Foreign.C.Types (CSize)
+import Foreign.Marshal.Array (peekArray)
 import Foreign.Marshal.Utils (copyBytes, fillBytes)
 import Foreign.Ptr
 import Foreign.Storable
@@ -59,6 +63,21 @@ instance Storable ProcArg where
           n = if l >= nameDataLen then nameDataLen-1 else l
       in copyBytes d cs n
 
+data ProcInfo = ProcInfo { procText :: Text
+                         , procArgs :: [ProcArg]
+                         }
+
+instance Storable ProcInfo where
+  sizeOf _ = #{size pghsProcInfo}
+  alignment _ = alignment (undefined :: CSize)
+  peek p = do csz :: CSize <- #{peek pghsProcInfo, codeSize} p
+              cptr <- #{peek pghsProcInfo, code} p
+              c <- Text.peekCStringLen (cptr,fromIntegral csz)
+              asz :: CSize <- #{peek pghsProcInfo, argsNum} p
+              aptr <- #{peek pghsProcInfo, args} p
+              a <- peekArray (fromIntegral asz) aptr
+              pure $ ProcInfo c a
+  poke _ _= error "ProcInfo isn't supposed to be poked"
 
 peekCString :: CString -> IO Text
 peekCString cs = do

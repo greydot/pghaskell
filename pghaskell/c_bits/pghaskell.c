@@ -113,7 +113,17 @@ static Datum pghsFuncHandler(PG_FUNCTION_ARGS, bool pltrusted)
                                          ,false
                                          ,pltrusted);
 
-    if(fn) fn();
+    if(fn) {
+        size_t nargs = PG_NARGS();
+        pghsArgValue *args = palloc(sizeof(*args) * nargs);
+
+        for(size_t i = 0; i < nargs; i++) {
+            args[i].isNull = PG_ARGISNULL(i);
+            args[i].datum = PG_GETARG_DATUM(i);
+        }
+
+        fn(args, nargs);
+    }
 
     SPI_finish();
 
@@ -151,7 +161,12 @@ static HsIOPtr compilePGHaskellFunction( Oid fnOid
 
     pghsArg *args;
     int nargs = getFunctionArgs(procTup, &args);
-    HsIOPtr fn = hsCompileFunction(procSource, srcLen);
+    pghsProcInfo pinfo = { .codeSize = srcLen
+                         , .code = procSource
+                         , .argsNum = nargs
+                         , .args = args
+                         };
+    HsIOPtr fn = hsCompileFunction(&pinfo);
 
     if(args)
         pfree(args);

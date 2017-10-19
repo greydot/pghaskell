@@ -2,7 +2,9 @@
 
 #include <stddef.h>
 
-typedef void (*HsIOPtr)(void);
+#include "pghaskell/types.h"
 
-HsIOPtr hsCompileFunction(const char* code, size_t size);
+typedef void (*HsIOPtr)(const pghsArgValue*, size_t);
+
+HsIOPtr hsCompileFunction(pghsProcInfo*);
 int hsValidateFunction(const char* code, size_t size);

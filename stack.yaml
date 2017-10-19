@@ -16,7 +16,7 @@
 #  name: custom-snapshot
 #  location: "./custom-snapshot.yaml"
 resolver: lts-9.9
-#resolver: ghc-8.2.1
+#resolver: nightly-2017-10-13
 
 # User packages to be built.
 # Various formats can be used as shown in the example below.
@@ -52,7 +52,7 @@ flags:
 extra-package-dbs: []
 
 # Control whether we use the GHC we find on the path
-system-ghc: true
+#system-ghc: true
 # 
 # Require a specific version of stack, using version ranges
 # require-stack-version: -any # Default

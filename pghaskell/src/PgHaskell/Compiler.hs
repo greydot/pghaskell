@@ -1,6 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 module PgHaskell.Compiler where
 
+import PgHaskell.CTypes
 import PgHaskell.Internal
 import PgHaskell.Internal.Elog
 
@@ -17,10 +18,10 @@ data PgProc = PgProc { procCode :: String
                      , procImports :: [ModuleName]
                      } deriving (Show)
 
-type Callable = [Int] -> PG Int
+type Callable = [ArgValue] -> PG Datum
 
-compileFunction :: Text -> IO (Either InterpreterError Callable)
-compileFunction txt = runInterpreter $ do
+compileFunction :: ProcInfo -> IO (Either InterpreterError Callable)
+compileFunction pinfo = runInterpreter $ do
     unsafeSetGhcOption "-v"
     unsafeSetGhcOption "-fobject-code"
     setImports $ ["Prelude"
@@ -29,10 +30,10 @@ compileFunction txt = runInterpreter $ do
                  ] ++ procImports pgproc
     interpret (procCode pgproc) fallBackCode
   where
-    pgproc = processSource txt
+    pgproc = processSource (procText pinfo)
     fallBackCode _ = do
         elog ElogWarning "Fallback pghaskell procedure"
-        pure (0 :: Int)
+        pure (Datum 0)
 
 validateFunction :: Text -> IO (Either InterpreterError Bool)
 validateFunction txt = runInterpreter $ do
@@ -58,10 +59,11 @@ processSource txt = PgProc { procCode = body
 
 test :: IO ()
 test = do
-    r <- compileFunction "putStrLn \"DERP\""
+    r <- compileFunction pinfo
     case r of
       Left e -> print e
-      Right f -> pure (f []) >> print (typeRep $ f [i])
+      Right f -> pure (f []) >> print (typeRep $ f [v])
   where
-    i = 123 :: Int
+    v = ArgValue False (Datum 0)
+    pinfo = ProcInfo "putStrLn \"DERP\"" []
 

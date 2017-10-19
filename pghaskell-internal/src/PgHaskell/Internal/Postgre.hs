@@ -1,7 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE TemplateHaskell #-}
-module PgHaskell.Internal.Postgre where
+module PgHaskell.Internal.Postgre (Postgre(..)) where
 
 import PgHaskell.Internal.InlineC
 import PgHaskell.Internal.Types
@@ -12,6 +12,8 @@ import Data.Monoid ((<>))
 import Data.Proxy (Proxy)
 import qualified Language.C.Inline as C
 
+-- | Class for converting PostgreSQL values
+--   to and from Datum.
 class Postgre t where
   postgreTypes :: Proxy t -> [TypeName]
   toDatum      :: t -> PG Datum

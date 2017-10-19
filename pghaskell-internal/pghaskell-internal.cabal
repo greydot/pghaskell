@@ -32,7 +32,8 @@ library
                        containers >= 0.5,
                        inline-c,
                        template-haskell,
-                       text >= 1.2
+                       text >= 1.2,
+                       vector
   hs-source-dirs:      src
   c-sources:           src/PgHaskell/Internal/Elog.c
                        src/PgHaskell/Internal/Postgre.c

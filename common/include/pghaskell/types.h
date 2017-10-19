@@ -22,3 +22,10 @@ typedef struct {
     bool isNull;
     Datum datum;
 } pghsArgValue;
+
+typedef struct {
+    size_t codeSize;
+    const char *code;
+    size_t argsNum;
+    pghsArg *args;
+} pghsProcInfo;
