@@ -22,12 +22,7 @@ type Callable = [ArgValue] -> PG Datum
 
 compileFunction :: ProcInfo -> IO (Either InterpreterError Callable)
 compileFunction pinfo = runInterpreter $ do
-    unsafeSetGhcOption "-v"
-    unsafeSetGhcOption "-fobject-code"
-    setImports $ ["Prelude"
-                 ,"PgHaskell.Internal"
-                 ,"PgHaskell.Internal.Elog"
-                 ] ++ procImports pgproc
+    setupGhc (procImports pgproc)
     interpret (procCode pgproc) fallBackCode
   where
     pgproc = processSource (procText pinfo)
@@ -37,12 +32,7 @@ compileFunction pinfo = runInterpreter $ do
 
 validateFunction :: Text -> IO (Either InterpreterError Bool)
 validateFunction txt = runInterpreter $ do
-    unsafeSetGhcOption "-v"
-    unsafeSetGhcOption "-fobject-code"
-    setImports $ ["Prelude"
-                 ,"PgHaskell.Internal"
-                 ,"PgHaskell.Internal.Elog"
-                 ] ++ procImports pgproc
+    setupGhc (procImports pgproc)
     typeChecks (procCode pgproc)
   where
     pgproc = processSource txt
@@ -55,7 +45,17 @@ processSource txt = PgProc { procCode = body
     isImport = Text.isPrefixOf "import "
     (imports,source) = partition isImport (Text.lines txt)
     prefix = "\\values -> do"
-    body = Text.unpack $ Text.unlines . (prefix:) $ map (\l -> " " <> l) source
+    body = Text.unpack $ Text.unlines . (prefix:) $ map (\l -> "  " <> l) source
+
+setupGhc :: MonadInterpreter m => [ModuleName] -> m ()
+setupGhc imps = do
+    unsafeSetGhcOption "-v"
+    unsafeSetGhcOption "-fobject-code"
+    set [languageExtensions := [OverloadedStrings]]
+    setImports $ ["Prelude"
+                 ,"PgHaskell.Internal"
+                 ,"PgHaskell.Internal.Elog"
+                 ] ++ imps
 
 test :: IO ()
 test = do

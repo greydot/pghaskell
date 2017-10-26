@@ -222,7 +222,6 @@ static int getFunctionArgs(HeapTuple procTup, pghsArg **args)
 
     int n = get_func_arg_info(procTup, &argTypes, &argNames, &argModes);
     elog(DEBUG2, "%d arguments found\n", n);
-    printf("%d arguments found\n", n);
 
     pghsArg *r = NULL;
     if(n > 0) {
@@ -238,7 +237,7 @@ static int getFunctionArgs(HeapTuple procTup, pghsArg **args)
 
             if(argNames && argNames[i]) {
                 strncpy(r[i].argName, argNames[i], sizeof(r[i].argName));
-                printf("arg %d name %s type %u:%s\n", i, argNames[i], argTypes[i], r[i].typeName);
+                elog(DEBUG2, "arg %d name %s type %u:%s\n", i, argNames[i], argTypes[i], r[i].typeName);
             }
 
 
