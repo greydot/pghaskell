@@ -5,7 +5,6 @@ module PgHaskell.Foreign where
 import PgHaskell.Compiler (compileFunction, validateFunction)
 import PgHaskell.CTypes
 import PgHaskell.Internal
-import PgHaskell.Internal.Elog
 
 import Data.Monoid ((<>))
 import Foreign.C.Types
@@ -13,7 +12,6 @@ import Foreign.Marshal.Array (peekArray)
 import Foreign.Ptr
 import Foreign.Storable
 import qualified Data.Text as Text
-import qualified Data.Text.Foreign as Text
 
 type Proc = Ptr ArgValue -> CSize -> IO Datum
 
@@ -32,13 +30,14 @@ hsCompileFunction pinfo = do
       Left err -> nullFunPtr <$ elog ElogWarning ("Failed to compile function: " <> Text.pack (show err))
       Right f -> wrap $ \p s -> runPG . f =<< peekArray (fromIntegral s) p
 
-foreign export ccall hsValidateFunction :: Ptr CChar -> CSize -> IO CInt
+foreign export ccall hsValidateFunction :: Ptr ProcInfo -> IO CInt
 
-hsValidateFunction :: Ptr CChar -> CSize -> IO CInt
-hsValidateFunction ptr sz = do
-    txt <- Text.peekCStringLen (ptr, fromIntegral sz)
+hsValidateFunction :: Ptr ProcInfo -> IO CInt
+hsValidateFunction pinfo = do
+    info <- peek pinfo
+    let txt = procText info
     elog ElogDebug2 ("Checking code:\n" <> txt)
-    res <- validateFunction txt
+    res <- validateFunction info
     case res of
       Left err -> 0 <$ elog ElogWarning ("Failed to validate function: " <> Text.pack (show err))
       Right b -> pure $ c b

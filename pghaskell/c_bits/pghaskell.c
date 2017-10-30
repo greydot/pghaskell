@@ -199,10 +199,18 @@ Datum pghsValidator(PG_FUNCTION_ARGS)
     }
 
     const char *procSource = TextDatumGetCString(srcDatum);
-    const size_t srcLen = strlen(procSource);
+    pghsArg *args;
+    int nargs = getFunctionArgs(procTup, &args);
+    pghsProcInfo pinfo = { .codeSize = strlen(procSource)
+                         , .code = procSource
+                         , .argsNum = nargs
+                         , .args = args
+                         };
 
-    int valid = hsValidateFunction(procSource, srcLen);
+    int valid = hsValidateFunction(&pinfo);
 
+    if(args)
+        pfree(args);
     ReleaseSysCache(procTup);
 
     if(!valid) {

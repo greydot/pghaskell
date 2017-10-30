@@ -7,4 +7,4 @@
 typedef Datum (*HsIOPtr)(const pghsArgValue*, size_t);
 
 HsIOPtr hsCompileFunction(pghsProcInfo*);
-int hsValidateFunction(const char* code, size_t size);
+int hsValidateFunction(pghsProcInfo*);

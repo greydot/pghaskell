@@ -3,11 +3,9 @@ module PgHaskell.Compiler where
 
 import PgHaskell.CTypes
 import PgHaskell.Internal
-import PgHaskell.Internal.Elog
 
 import Data.List (partition)
 import Data.Monoid ((<>))
-import Data.Text (Text)
 import qualified Data.Text as Text
 import Data.Typeable
 
@@ -25,25 +23,21 @@ compileFunction pinfo = runInterpreter $ do
     setupGhc (procImports pgproc)
     interpret (procCode pgproc) fallBackCode
   where
-    pgproc = processSource (procText pinfo)
+    pgproc = processSource pinfo
     fallBackCode _ = do
         elog ElogWarning "Fallback pghaskell procedure"
         pure (Datum 0)
 
-validateFunction :: Text -> IO (Either InterpreterError Bool)
-validateFunction txt = runInterpreter $ do
-    setupGhc (procImports pgproc)
-    typeChecks (procCode pgproc)
-  where
-    pgproc = processSource txt
+validateFunction :: ProcInfo -> IO (Either InterpreterError Bool)
+validateFunction pinfo = fmap (const True) <$> compileFunction pinfo
 
-processSource :: Text -> PgProc
+processSource :: ProcInfo -> PgProc
 processSource txt = PgProc { procCode = body
                            , procImports = map (Text.unpack . Text.drop 7) imports
                            }
   where
     isImport = Text.isPrefixOf "import "
-    (imports,source) = partition isImport (Text.lines txt)
+    (imports,source) = partition isImport (Text.lines $ procText txt)
     prefix = "\\values -> do"
     body = Text.unpack $ Text.unlines . (prefix:) $ map (\l -> "  " <> l) source
 
