@@ -25,13 +25,17 @@ flag debug
 library
   exposed-modules:     PgHaskell.Compiler,
                        PgHaskell.CTypes,
-                       PgHaskell.Foreign
-  -- other-modules:       
+                       PgHaskell.Foreign,
+                       PgHaskell.Types
+
+  other-modules:       PgHaskell.Compiler.Context
+
   -- other-extensions:    
   build-depends:       base >=4.8 && <5,
                        array,
                        bytestring,
                        containers,
+                       haskell-src-exts >= 1.18,
                        hint,
                        inline-c,
                        pghaskell-internal == 0.1,

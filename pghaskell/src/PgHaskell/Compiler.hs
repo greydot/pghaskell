@@ -1,26 +1,21 @@
 {-# LANGUAGE OverloadedStrings #-}
 module PgHaskell.Compiler where
 
-import PgHaskell.CTypes
+import PgHaskell.Compiler.Context
+import PgHaskell.Types
 import PgHaskell.Internal
 
-import Data.List (partition)
-import Data.Monoid ((<>))
+import Data.List (filter)
+import Data.Monoid
 import qualified Data.Text as Text
 import Data.Typeable
 
 import Language.Haskell.Interpreter
 import Language.Haskell.Interpreter.Unsafe
 
-data PgProc = PgProc { procCode :: String
-                     , procImports :: [ModuleName]
-                     } deriving (Show)
-
-type Callable = [ArgValue] -> PG Datum
-
 compileFunction :: ProcInfo -> IO (Either InterpreterError Callable)
 compileFunction pinfo = runInterpreter $ do
-    setupGhc (procImports pgproc)
+    setupGhc (procContext pgproc)
     interpret (procCode pgproc) fallBackCode
   where
     pgproc = processSource pinfo
@@ -32,24 +27,24 @@ validateFunction :: ProcInfo -> IO (Either InterpreterError Bool)
 validateFunction pinfo = fmap (const True) <$> compileFunction pinfo
 
 processSource :: ProcInfo -> PgProc
-processSource txt = PgProc { procCode = body
-                           , procImports = map (Text.unpack . Text.drop 7) imports
-                           }
+processSource pinfo = PgProc { procCode = Text.unpack body
+                             , procContext = ctx
+                             }
   where
+    ctx = deduceContext (procText pinfo)
     isImport = Text.isPrefixOf "import "
-    (imports,source) = partition isImport (Text.lines $ procText txt)
+    source = filter (not . isImport) (Text.lines $ procText pinfo)
     prefix = "\\values -> do"
-    body = Text.unpack $ Text.unlines . (prefix:) $ map (\l -> "  " <> l) source
+    body = Text.unlines . (prefix:) $ map (\l -> "  " <> l) source
 
-setupGhc :: MonadInterpreter m => [ModuleName] -> m ()
-setupGhc imps = do
+setupGhc :: MonadInterpreter m => ProcContext -> m ()
+setupGhc ctx = do
     unsafeSetGhcOption "-v"
     unsafeSetGhcOption "-fobject-code"
     set [languageExtensions := [OverloadedStrings]]
-    setImports $ ["Prelude"
-                 ,"PgHaskell.Internal"
-                 ,"PgHaskell.Internal.Elog"
-                 ] ++ imps
+    setImportsQ $ [("Prelude", Nothing)
+                  ,("PgHaskell.Internal",Nothing)
+                  ] ++ procImports ctx
 
 test :: IO ()
 test = do

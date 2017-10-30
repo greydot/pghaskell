@@ -2,6 +2,7 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 module PgHaskell.CTypes ( ProcKey(..)
                         , ProcArg(..)
+                        , ProcCode
                         , ProcInfo(..)
                         ) where
 
@@ -63,7 +64,10 @@ instance Storable ProcArg where
           n = if l >= nameDataLen then nameDataLen-1 else l
       in copyBytes d cs n
 
-data ProcInfo = ProcInfo { procText :: Text
+
+type ProcCode = Text
+
+data ProcInfo = ProcInfo { procText :: ProcCode
                          , procArgs :: [ProcArg]
                          }
 
