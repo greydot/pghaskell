@@ -40,7 +40,7 @@ processSource pinfo = PgProc { procCode = Text.unpack body
 setupGhc :: MonadInterpreter m => ProcContext -> m ()
 setupGhc ctx = do
     unsafeSetGhcOption "-v"
-    unsafeSetGhcOption "-fobject-code"
+--    unsafeSetGhcOption "-fobject-code"
     set [languageExtensions := [OverloadedStrings]]
     setImportsQ $ [("Prelude", Nothing)
                   ,("PgHaskell.Internal",Nothing)
