@@ -16,12 +16,9 @@ import Language.Haskell.Interpreter.Unsafe
 compileFunction :: ProcInfo -> IO (Either InterpreterError Callable)
 compileFunction pinfo = runInterpreter $ do
     setupGhc (procContext pgproc)
-    interpret (procCode pgproc) fallBackCode
+    interpret (procCode pgproc) (as :: Callable)
   where
     pgproc = processSource pinfo
-    fallBackCode _ = do
-        elog ElogWarning "Fallback pghaskell procedure"
-        pure (Datum 0)
 
 validateFunction :: ProcInfo -> IO (Either InterpreterError Bool)
 validateFunction pinfo = fmap (const True) <$> compileFunction pinfo
