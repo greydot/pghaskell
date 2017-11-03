@@ -41,7 +41,7 @@ setupGhc :: MonadInterpreter m => ProcContext -> m ()
 setupGhc ctx = do
     unsafeSetGhcOption "-v"
 --    unsafeSetGhcOption "-fobject-code"
-    set [languageExtensions := [OverloadedStrings]]
+    set [languageExtensions := procExtensions ctx]
     setImportsQ $ [("Prelude", Nothing)
                   ,("PgHaskell.Internal",Nothing)
                   ] ++ procImports ctx
