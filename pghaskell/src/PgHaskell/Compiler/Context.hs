@@ -4,29 +4,28 @@ module PgHaskell.Compiler.Context ( deduceContext
 import PgHaskell.Types
 
 import Control.Monad ((<=<))
-import Data.Foldable (foldl')
+import Data.Foldable (foldMap)
 import Data.Maybe (mapMaybe)
-import Data.Monoid ((<>))
 import qualified Data.Text as Text
 import Language.Haskell.Exts hiding (Extension)
 import Language.Haskell.Interpreter.Extension (Extension(..))
 import Text.Read (readMaybe)
 
 deduceContext :: ProcCode -> ProcContext
-deduceContext code = foldl' go mempty ls
+deduceContext code = foldMap go ls
     where
         ls = Text.lines code
-        go ctx l = fromParseRes ctx (checkImport ctx l <||> checkPragma ctx l)
+        go l = fromParseRes mempty (checkImport l <||> checkPragma l)
 
-        checkImport ctx l = do
+        checkImport l = do
             d <- parseImportDecl (Text.unpack l)
             let n = moduleName  $  importModule d
                 a = moduleName <$> importAs d
-            pure $ ctx <> mempty { procImports = [(n,a)] }
-        checkPragma ctx l = do
+            pure $ mempty { procImports = [(n,a)] }
+        checkPragma l = do
             pragmas <- getTopPragmas (Text.unpack l)
             let exts = languagePragmas =<< pragmas
-            pure $ ctx <> mempty { procExtensions = exts }
+            pure $ mempty { procExtensions = exts }
 
 moduleName :: ModuleName l -> String
 moduleName (ModuleName _ n) = n
