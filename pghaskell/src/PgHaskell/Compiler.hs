@@ -7,6 +7,7 @@ import PgHaskell.Internal
 
 import Data.List (filter)
 import Data.Monoid
+import Data.Text (Text)
 import qualified Data.Text as Text
 import Data.Typeable
 
@@ -31,8 +32,13 @@ processSource pinfo = PgProc { procCode = Text.unpack body
     ctx = deduceContext (procText pinfo)
     isImport = Text.isPrefixOf "import "
     source = filter (not . isImport) (Text.lines $ procText pinfo)
-    prefix = "\\values -> do"
+    args = zip (procArgs pinfo) [0..]
+    prefix = Text.unlines $ ["\\values -> do"] ++ ["  " <> argToCode arg n | (arg,n) <- args]
     body = Text.unlines . (prefix:) $ map (\l -> "  " <> l) source
+
+argToCode :: ProcArg -> Word -> Text
+argToCode arg n = mconcat [ argName arg, " <- fromDatum $ argDatum (values !! "
+                          , Text.pack $ show n, ")"]
 
 setupGhc :: MonadInterpreter m => ProcContext -> m ()
 setupGhc ctx = do
