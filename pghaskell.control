@@ -1,7 +1,7 @@
 # pghaskell extension
 comment = 'Haskell procedural language'
 default_version = '0.1'
-module_pathname = '/home/lyrr/dev/hs/pghaskell/libpghaskell.so'
+module_pathname = '/home/void/dev/hs/pghaskell/libpghaskell.so'
 relocatable = false
 schema = pg_catalog
 superuser = false
