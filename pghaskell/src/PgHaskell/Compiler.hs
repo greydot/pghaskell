@@ -5,7 +5,6 @@ import PgHaskell.Compiler.Context
 import PgHaskell.Types
 import PgHaskell.Internal
 
-import Data.List (filter)
 import Data.Monoid
 import Data.Text (Text)
 import qualified Data.Text as Text
@@ -29,12 +28,10 @@ processSource pinfo = PgProc { procCode = Text.unpack body
                              , procContext = ctx
                              }
   where
-    ctx = deduceContext (procText pinfo)
-    isImport = Text.isPrefixOf "import "
-    source = filter (not . isImport) (Text.lines $ procText pinfo)
+    (ctx, source) = splitContext (procText pinfo)
     args = zip (procArgs pinfo) [0..]
     prefix = Text.unlines $ ["\\values -> do"] ++ ["  " <> argToCode arg n | (arg,n) <- args]
-    body = Text.unlines . (prefix:) $ map (\l -> "  " <> l) source
+    body = Text.unlines . (prefix:) $ map (\l -> "  " <> l) (Text.lines source)
 
 argToCode :: ProcArg -> Word -> Text
 argToCode arg n = mconcat [ argName arg, " <- fromDatum $ argDatum (values !! "

@@ -1,22 +1,27 @@
-module PgHaskell.Compiler.Context ( deduceContext
+{-# LANGUAGE OverloadedStrings #-}
+module PgHaskell.Compiler.Context ( splitContext
                                   ) where
 
 import PgHaskell.Types
 
-import Control.Monad ((<=<))
+import Control.Monad ((<=<), when)
 import Data.Foldable (foldMap)
 import Data.Maybe (mapMaybe)
+import Data.Monoid ((<>))
 import qualified Data.Text as Text
 import Language.Haskell.Exts hiding (Extension)
 import Language.Haskell.Interpreter.Extension (Extension(..))
 import Text.Read (readMaybe)
 
-deduceContext :: ProcCode -> ProcContext
-deduceContext code = foldMap go ls
+splitContext :: ProcCode -> (ProcContext, ProcCode)
+splitContext code = foldMap go ls
     where
         ls = Text.lines code
-        go l = fromParseRes mempty (checkImport l <||> checkPragma l)
+        go l = case checkContext l of
+                 ParseOk ctx -> (ctx, mempty)
+                 ParseFailed _ _ -> (mempty, l <> "\n")
 
+        checkContext l = checkImport l <||> checkPragma l
         checkImport l = do
             d <- parseImportDecl (Text.unpack l)
             let n = moduleName  $  importModule d
@@ -44,6 +49,6 @@ languagePragmas _ = []
 ParseOk a <||> _ = ParseOk a
 ParseFailed _ _ <||> r = r
 
-fromParseRes :: a -> ParseResult a -> a
-fromParseRes _ (ParseOk x) = x
-fromParseRes d _ = d
+-- fromParseRes :: a -> ParseResult a -> a
+-- fromParseRes _ (ParseOk x) = x
+-- fromParseRes d _ = d
