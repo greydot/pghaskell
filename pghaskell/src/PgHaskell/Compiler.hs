@@ -51,8 +51,15 @@ test = do
     r <- compileFunction pinfo
     case r of
       Left e -> print e
-      Right f -> pure (f []) >> print (typeRep $ f [v])
+      Right f -> pure (f [v]) >> print (typeRep $ f [v])
   where
     v = ArgValue False (Datum 0)
-    pinfo = ProcInfo "putStrLn \"DERP\"" []
+    pinfo = ProcInfo code [ProcArg "i" "int"]
+    code = Text.unlines ["{-# LANGUAGE OverloadedStrings #-}"
+                        ,"import Control.Monad.IO.Class"
+                        ,"import Data.Int"
+                        ,"import qualified Data.Text as Text"
+                        ,"liftIO $ print (i :: Int32)"
+                        ,"pure (Datum 0)"
+                        ]
 
