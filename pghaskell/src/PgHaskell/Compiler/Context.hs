@@ -24,6 +24,9 @@ deduceContext code = foldMap go ls
             pure $ mempty { procImports = [(n,a)] }
         checkPragma l = do
             pragmas <- getTopPragmas (Text.unpack l)
+            -- getTopPragmas never fails
+            when (null pragmas) $
+              fail "no pragmas found"
             let exts = languagePragmas =<< pragmas
             pure $ mempty { procExtensions = exts }
 
