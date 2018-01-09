@@ -15,7 +15,7 @@
 # resolver:
 #  name: custom-snapshot
 #  location: "./custom-snapshot.yaml"
-resolver: lts-9.14
+resolver: lts-10.2
 #resolver: nightly-2017-10-13
 
 # User packages to be built.
@@ -47,6 +47,7 @@ extra-deps: []
 flags:
   pghaskell:
     dummy: true
+    debug: true
 
 # Extra package databases containing global packages
 extra-package-dbs: []
@@ -68,3 +69,7 @@ extra-package-dbs: []
 # 
 # Allow a newer minor version of GHC than the snapshot specifies
 compiler-check: newer-minor
+
+nix:
+  enable: true
+  packages: [gmp,ncurses,postgresql100]
