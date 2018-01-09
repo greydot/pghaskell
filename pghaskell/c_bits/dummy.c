@@ -18,7 +18,13 @@ sigjmp_buf *PG_exception_stack = NULL;
 int SPI_connect(void) { return -1; }
 int SPI_finish(void) { return -1; }
 
-void pg_re_throw(void) { puts("pg_re_throw"); for(;;); }
+void pg_re_throw(void) {
+    // Infinite loop with no side effects is considered a UB
+    // by C standard.
+    static int i = 0;
+    puts("pg_re_throw");
+    for(;;) i++;
+}
 void elog_start(const char *filename, int lineno, const char *funcname) {
     UNUSED(filename); UNUSED(lineno); UNUSED(funcname); return;
 }
