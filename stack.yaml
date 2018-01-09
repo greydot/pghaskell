@@ -46,7 +46,6 @@ extra-deps: []
 # Override default flag values for local packages and extra-deps
 flags:
   pghaskell:
-    dummy: true
     debug: true
 
 # Extra package databases containing global packages
@@ -69,6 +68,7 @@ extra-package-dbs: []
 # 
 # Allow a newer minor version of GHC than the snapshot specifies
 compiler-check: newer-minor
+allow-newer: true
 
 nix:
   enable: true
