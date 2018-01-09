@@ -1,7 +1,7 @@
 #!/bin/bash
 
 echo "Cleaning up"
-rm libpghaskell.so
+[ -s libpghaskell.so ] && rm libpghaskell.so
 stack clean || exit 1
 
 echo "Building dev version with stack"
