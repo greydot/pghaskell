@@ -13,6 +13,7 @@ cabal-version:       >=2.0
 
 flag dummy
   description:         Enable dummy C code
+  default:             False
 
 flag debug
   description:         Build with debugging symbols
