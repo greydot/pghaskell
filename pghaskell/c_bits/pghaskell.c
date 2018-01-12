@@ -236,8 +236,8 @@ static int getFunctionArgs(HeapTuple procTup, pghsArg **args)
         r = palloc(sizeof(*r) * n);
         for(int i = 0; i < n; i++) {
             HeapTuple typeTup = SearchSysCache1(TYPEOID, ObjectIdGetDatum(argTypes[i]));
-            if(HeapTupleIsValid(typeTup)) {
-                elog(ERROR, "cache lookup failed to argument %d type %u", i, argTypes[i]);
+            if(!HeapTupleIsValid(typeTup)) {
+                elog(ERROR, "cache lookup failed for argument %d type %u", i, argTypes[i]);
             }
             Form_pg_type typeStruct = (Form_pg_type) GETSTRUCT(typeTup);
 
