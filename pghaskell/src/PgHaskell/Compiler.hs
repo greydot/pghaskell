@@ -15,11 +15,15 @@ import Language.Haskell.Interpreter.Unsafe
 
 compileFunction :: ProcInfo -> IO (Either InterpreterError Callable)
 compileFunction pinfo = runInterpreter $ do
+    elog ElogDebug1 msg
     setupGhc (procContext pgproc)
-    elog ElogDebug1 ("Compiling Haskell code:\n"<> Text.pack (procCode pgproc))
     interpret (procCode pgproc) (as :: Callable)
   where
     pgproc = processSource pinfo
+    msg = mconcat ["Compiling Haskell code.\n"
+                  ,"Raw code:\n" <> procText pinfo
+                  ,"\nPrepared code:\n" <> Text.pack (procCode pgproc)
+                  ,"\nContext+\n" <> Text.pack (show $ procContext pgproc)]
 
 validateFunction :: ProcInfo -> IO (Either InterpreterError Bool)
 validateFunction pinfo = fmap (const True) <$> compileFunction pinfo

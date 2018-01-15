@@ -23,8 +23,6 @@ foreign export ccall hsCompileFunction :: Ptr ProcInfo -> IO (FunPtr Proc)
 hsCompileFunction :: Ptr ProcInfo -> IO (FunPtr Proc)
 hsCompileFunction pinfo = do
     info <- peek pinfo
-    let txt = procText info
-    elog ElogDebug2 ("Compiling code:\n" <> txt)
     res <- compileFunction info
     case res of
       Left err -> nullFunPtr <$ elog ElogError ("Failed to compile function: " <> Text.pack (show err))
@@ -36,7 +34,6 @@ hsValidateFunction :: Ptr ProcInfo -> IO CInt
 hsValidateFunction pinfo = do
     info <- peek pinfo
     let txt = procText info
-    elog ElogDebug2 ("Checking code:\n" <> txt)
     res <- validateFunction info
     case res of
       Left err -> 0 <$ elog ElogWarning ("Failed to validate function: " <> Text.pack (show err))
