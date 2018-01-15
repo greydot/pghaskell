@@ -47,7 +47,8 @@ argToCode :: Bool -> ProcArg -> Word -> Text
 argToCode s arg n = mconcat [ argName arg, " <- ", getF, " (values !! "
                             , Text.pack $ show n, ")"]
   where
-    getF = if not s then "getNullArgument" else "getArgument"
+    getF | not s || argNullable arg = "getNullArgument"
+         | otherwise = "getArgument"
 
 shiftLine :: Text -> Text
 shiftLine = ("    " <>)
