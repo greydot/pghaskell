@@ -29,4 +29,5 @@ typedef struct {
     const char *code;
     size_t argsNum;
     pghsArg *args;
+    bool isStrict;
 } pghsProcInfo;

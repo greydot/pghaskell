@@ -70,8 +70,9 @@ instance Storable ProcArg where
 
 type ProcCode = Text
 
-data ProcInfo = ProcInfo { procText :: ProcCode
-                         , procArgs :: [ProcArg]
+data ProcInfo = ProcInfo { procText     :: ProcCode
+                         , procArgs     :: [ProcArg]
+                         , procIsStrict :: Bool
                          }
 
 instance Storable ProcInfo where
@@ -83,7 +84,8 @@ instance Storable ProcInfo where
               asz :: CSize <- #{peek pghsProcInfo, argsNum} p
               aptr <- #{peek pghsProcInfo, args} p
               a <- peekArray (fromIntegral asz) aptr
-              pure $ ProcInfo c a
+              s <- #{peek pghsProcInfo, isStrict} p
+              pure $ ProcInfo c a s
   poke _ _= error "ProcInfo isn't supposed to be poked"
 
 peekCString :: CString -> IO Text

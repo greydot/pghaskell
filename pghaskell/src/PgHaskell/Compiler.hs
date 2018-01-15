@@ -30,24 +30,24 @@ processSource pinfo = PgProc { procCode = Text.unpack body
                              }
   where
     (ctx, source) = splitContext (procText pinfo)
-    prefix = createProcPrefix (procArgs pinfo)
+    prefix = createProcPrefix (procArgs pinfo) (procIsStrict pinfo)
     body = prefix <> Text.unlines (map shiftLine (Text.lines source))
 
-createProcPrefix :: [ProcArg] -> ProcCode
-createProcPrefix args = Text.unlines (prefix:argEx)
+createProcPrefix :: [ProcArg] -> Bool -> ProcCode
+createProcPrefix args strict = Text.unlines (prefix:argEx)
   where
     prefix = Text.unlines ["\\values -> if length values /= " <> nargs
                           ,"  then wrongArgumentsNum (length values) " <> nargs
                           ,"  else do"
                                             ]
     nargs = Text.pack $ show $ length args
-    argEx = map (shiftLine . uncurry argToCode) $ zip args [0..]
+    argEx = map (shiftLine . uncurry (argToCode strict)) $ zip args [0..]
 
-argToCode :: ProcArg -> Word -> Text
-argToCode arg n = mconcat [ argName arg, " <- ", getF, " (values !! "
-                          , Text.pack $ show n, ")"]
+argToCode :: Bool -> ProcArg -> Word -> Text
+argToCode s arg n = mconcat [ argName arg, " <- ", getF, " (values !! "
+                            , Text.pack $ show n, ")"]
   where
-    getF = if (argNullable arg) then "getNullArgument" else "getArgument"
+    getF = if not s then "getNullArgument" else "getArgument"
 
 shiftLine :: Text -> Text
 shiftLine = ("    " <>)
@@ -69,7 +69,7 @@ test = do
       Right f -> pure (f [v]) >> print (typeRep $ f [v])
   where
     v = ArgValue False (Datum 0)
-    pinfo = ProcInfo code [ProcArg "i" "int" True]
+    pinfo = ProcInfo code [ProcArg "i" "int" True] False
     code = Text.unlines ["{-# LANGUAGE OverloadedStrings #-}"
                         ,"import Control.Monad.IO.Class"
                         ,"import Data.Int"

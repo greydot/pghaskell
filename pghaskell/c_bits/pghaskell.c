@@ -165,6 +165,7 @@ static HsIOPtr compilePGHaskellFunction( Oid fnOid
                          , .code = procSource
                          , .argsNum = nargs
                          , .args = args
+                         , .isStrict = procStruct->proisstrict
                          };
     HsIOPtr fn = hsCompileFunction(&pinfo);
 
