@@ -27,7 +27,7 @@ hsCompileFunction pinfo = do
     elog ElogDebug2 ("Compiling code:\n" <> txt)
     res <- compileFunction info
     case res of
-      Left err -> nullFunPtr <$ elog ElogWarning ("Failed to compile function: " <> Text.pack (show err))
+      Left err -> nullFunPtr <$ elog ElogError ("Failed to compile function: " <> Text.pack (show err))
       Right f -> wrap $ \p s -> runPG . f =<< peekArray (fromIntegral s) p
 
 foreign export ccall hsValidateFunction :: Ptr ProcInfo -> IO CInt

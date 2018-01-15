@@ -229,7 +229,7 @@ static int getFunctionArgs(HeapTuple procTup, pghsArg **args)
     char *argModes;
 
     int n = get_func_arg_info(procTup, &argTypes, &argNames, &argModes);
-    elog(DEBUG2, "%d arguments found\n", n);
+    elog(DEBUG1, "%d arguments found\n", n);
 
     pghsArg *r = NULL;
     if(n > 0) {
@@ -243,11 +243,17 @@ static int getFunctionArgs(HeapTuple procTup, pghsArg **args)
 
             strncpy(r[i].typeName, NameStr(typeStruct->typname), sizeof(r[i].typeName));
 
+            r[i].nullable = !typeStruct->typnotnull;
+
             if(argNames && argNames[i]) {
                 strncpy(r[i].argName, argNames[i], sizeof(r[i].argName));
-                elog(DEBUG2, "arg %d name %s type %u:%s\n", i, argNames[i], argTypes[i], r[i].typeName);
+                elog(DEBUG1, "arg %d name %s type %u:%s nullable %s\n", i
+                                                                      , argNames[i]
+                                                                      , argTypes[i]
+                                                                      , r[i].typeName
+                                                                      , r[i].nullable ? "true" : "false"
+                                                                      );
             }
-
 
             ReleaseSysCache(typeTup);
         }

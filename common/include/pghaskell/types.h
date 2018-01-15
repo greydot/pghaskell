@@ -16,6 +16,7 @@ typedef struct {
 typedef struct {
     char argName[NAMEDATALEN];
     char typeName[NAMEDATALEN];
+    bool nullable;
 } pghsArg;
 
 typedef struct {

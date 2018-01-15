@@ -41,6 +41,7 @@ instance Storable ProcKey where
 
 data ProcArg = ProcArg { argName :: Text
                        , argTypeName :: Text
+                       , argNullable :: Bool
                        } deriving (Show)
 
 nameDataLen :: Int
@@ -52,7 +53,8 @@ instance Storable ProcArg where
   peek p = do
     n <- peekCString $ #{ptr pghsArg, argName} p
     t <- peekCString $ #{ptr pghsArg, typeName} p
-    pure $ ProcArg n t
+    nullable <- #{peek pghsArg, nullable} p
+    pure $ ProcArg n t nullable
   poke p a = do
     fillBytes p 0 (sizeOf (undefined :: ProcArg))
     Text.withCStringLen (argName a) $ \(cs,l) ->
@@ -63,6 +65,7 @@ instance Storable ProcArg where
       let d = #{ptr pghsArg, typeName} p
           n = if l >= nameDataLen then nameDataLen-1 else l
       in copyBytes d cs n
+    #{poke pghsArg, nullable} p (argNullable a)
 
 
 type ProcCode = Text

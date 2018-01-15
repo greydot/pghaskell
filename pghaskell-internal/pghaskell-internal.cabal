@@ -22,6 +22,7 @@ library
   exposed-modules:     PgHaskell.Internal
                        PgHaskell.Internal.Argument
                        PgHaskell.Internal.Elog
+                       PgHaskell.Internal.Errors
                        PgHaskell.Internal.InlineC
                        PgHaskell.Internal.Postgre
                        PgHaskell.Internal.Types

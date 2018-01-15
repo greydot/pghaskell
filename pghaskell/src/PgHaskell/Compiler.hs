@@ -16,6 +16,7 @@ import Language.Haskell.Interpreter.Unsafe
 compileFunction :: ProcInfo -> IO (Either InterpreterError Callable)
 compileFunction pinfo = runInterpreter $ do
     setupGhc (procContext pgproc)
+    elog ElogDebug1 ("Compiling Haskell code:\n"<> Text.pack (procCode pgproc))
     interpret (procCode pgproc) (as :: Callable)
   where
     pgproc = processSource pinfo
@@ -29,19 +30,33 @@ processSource pinfo = PgProc { procCode = Text.unpack body
                              }
   where
     (ctx, source) = splitContext (procText pinfo)
-    args = zip (procArgs pinfo) [0..]
-    prefix = Text.unlines $ ["\\values -> do"] ++ ["  " <> argToCode arg n | (arg,n) <- args]
-    body = Text.unlines . (prefix:) $ map (\l -> "  " <> l) (Text.lines source)
+    prefix = createProcPrefix (procArgs pinfo)
+    body = prefix <> Text.unlines (map shiftLine (Text.lines source))
+
+createProcPrefix :: [ProcArg] -> ProcCode
+createProcPrefix args = Text.unlines (prefix:argEx)
+  where
+    prefix = Text.unlines ["\\values -> if length values /= " <> nargs
+                          ,"  then wrongArgumentsNum (length values) " <> nargs
+                          ,"  else do"
+                                            ]
+    nargs = Text.pack $ show $ length args
+    argEx = map (shiftLine . uncurry argToCode) $ zip args [0..]
 
 argToCode :: ProcArg -> Word -> Text
-argToCode arg n = mconcat [ argName arg, " <- fromDatum $ argDatum (values !! "
+argToCode arg n = mconcat [ argName arg, " <- ", getF, " (values !! "
                           , Text.pack $ show n, ")"]
+  where
+    getF = if (argNullable arg) then "getNullArgument" else "getArgument"
+
+shiftLine :: Text -> Text
+shiftLine = ("    " <>)
 
 setupGhc :: MonadInterpreter m => ProcContext -> m ()
 setupGhc ctx = do
     unsafeSetGhcOption "-v"
 --    unsafeSetGhcOption "-fobject-code"
-    set [languageExtensions := procExtensions ctx]
+    set [languageExtensions := (OverloadedStrings:procExtensions ctx)]
     setImportsQ $ [("Prelude", Nothing)
                   ,("PgHaskell.Internal",Nothing)
                   ] ++ procImports ctx
@@ -54,12 +69,12 @@ test = do
       Right f -> pure (f [v]) >> print (typeRep $ f [v])
   where
     v = ArgValue False (Datum 0)
-    pinfo = ProcInfo code [ProcArg "i" "int"]
+    pinfo = ProcInfo code [ProcArg "i" "int" True]
     code = Text.unlines ["{-# LANGUAGE OverloadedStrings #-}"
                         ,"import Control.Monad.IO.Class"
                         ,"import Data.Int"
                         ,"import qualified Data.Text as Text"
-                        ,"liftIO $ print (i :: Int32)"
+                        ,"liftIO $ print (i :: Maybe Int32)"
                         ,"pure (Datum 0)"
                         ]
 
